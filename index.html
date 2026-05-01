@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visual Pharmacy Store</title>
+<style>
+  /* Base & Reset */
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: transparent;
+    color: #7bb474;
+    box-sizing: border-box;
+  }
+  * { box-sizing: inherit; }
+
+  /* Main Layout */
+  .store-container {
+    display: flex;
+    max-width: 1200px;
+    margin: 0 auto;
+    height: 90vh;
+    min-height: 600px;
+    border: 1px solid #eaeaea;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  }
+
+  /* Left Side: Product Grid */
+  .products-panel {
+    flex: 2;
+    padding: 20px;
+    overflow-y: auto;
+    background-color: #fafafa;
+  }
+  
+  .products-header { margin-bottom: 20px; }
+  .products-header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0 0 15px 0;
+  }
+
+  /* Search Bar Styling */
+  .search-container {
+    position: relative;
+    width: 100%;
+  }
+  
+  .search-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #ddd;
+    border-radius: 24px;
+    font-size: 14px;
+    background-color: #fff;
+    transition: all 0.2s;
+    box-sizing: border-box;
+  }
+  .search-input:focus {
+    outline: none;
+    border-color: #111;
+    box-shadow: 0 0 0 2px rgba(0,0,0,0.05);
+  }
+
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
+  }
+
+  /* Product Card */
+  .product-card {
+    background: #f0f0eb; 
+    border-radius: 8px;
+    padding: 15px;
+    text-align: center;
+    transition: transform 0.2s;
+    position: relative; 
+  }
+  .product-card:hover { transform: translateY(-2px); }
+  .product-image {
+    width: 100%;
+    height: 140px;
+    object-fit: contain; /* Changed to contain so your images fit perfectly without cropping */
+    border-radius: 4px;
+    mix-blend-mode: multiply; 
+    margin-bottom: 15px;
+  }
+  .product-title {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    color: #222;
+  }
+  .product-type {
+    font-size: 11px;
+    color: #777;
+    margin-bottom: 8px;
+  }
+  .product-price {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+  .add-to-cart-btn {
+    background: #7bb474;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .add-to-cart-btn:hover { background: #abd1b0; }
+
+  /* Product Card Rx Badge */
+  .rx-card-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #444;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 3px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+
+  .no-results {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px;
+    color: #777;
+    font-style: italic;
+  }
+
+  /* Right Side: Sidebar */
+  .sidebar {
+    flex: 1;
+    min-width: 350px;
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid #eaeaea;
+    background: #fff;
+    overflow-y: auto;
+  }
+
+  /* Cart Section */
+  .cart-section {
+    background: #7bb474;
+    color: #fff;
+    padding: 20px;
+  }
+  .cart-section h2 {
+    margin: 0 0 20px 0;
+    font-size: 20px;
+    font-weight: 400;
+  }
+  .cart-items {
+    max-height: 250px;
+    overflow-y: auto;
+  }
+  .cart-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    font-size: 13px;
+  }
+  .cart-item-img {
+    width: 40px;
+    height: 40px;
+    background: #fff;
+    border-radius: 4px;
+    margin-right: 12px;
+    object-fit: cover;
+  }
+  .cart-item-details { flex: 1; }
+  .cart-item-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+  }
+  .cart-item-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .qty-btn {
+    background: #fff;
+    color: #333;
+    border: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .cart-total {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #555;
+    display: flex;
+    justify-content: space-between;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  /* Checkout Form Section */
+  .checkout-section { padding: 20px; }
+
+  /* Prescription Status Check Panel */
+  .rx-check-panel {
+    background-color: #f7f7f7;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 25px;
+    border: 1px solid #eaeaea;
+  }
+  .rx-check-panel h3 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: #111;
+  }
+  .rx-status-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+  .status-label {
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .status-label.required { background: #ef4444; color: #fff; }
+  .status-label.otc { background: #10b981; color: #fff; }
+
+  .form-section { margin-bottom: 20px; }
+  .form-section h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    color: #111;
+  }
+  .input-group {
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+  }
+  .input-row { display: flex; gap: 10px; }
+  .input-row .input-group { flex: 1; }
+  label { font-size: 12px; margin-bottom: 4px; color: #555; }
+  
+  input, select, textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 13px;
+    background-color: #fafafa;
+    box-sizing: border-box;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #111;
+    background-color: #fff;
+  }
+
+  /* LOCKED TEXTAREA */
+  textarea {
+    resize: none;
+    height: 60px;
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 14px;
+    background-color: #111;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  .submit-btn:hover { background-color: #7bb474; }
+
+  /* Responsive Stacking */
+  @media (max-width: 768px) {
+    .store-container { flex-direction: column; height: auto; }
+    .sidebar { border-left: none; border-top: 1px solid #eaeaea; }
+  }
+</style>
+</head>
+<body>
+
+<div class="store-container">
+  <!-- Left Side: Products -->
+  <div class="products-panel">
+    <div class="products-header">
+      <h1>Our Medicines</h1>
+      <div class="search-container">
+        <input type="text" id="searchInput" class="search-input" placeholder="Search by brand or type (e.g., Amoxicillin)...">
+      </div>
+    </div>
+    <div class="product-grid" id="productGrid">
+      <!-- Products generated by JS -->
+    </div>
+  </div>
+
+  <!-- Right Side: Sidebar -->
+  <div class="sidebar">
+    <div class="cart-section">
+      <h2>Shopping Cart</h2>
+      <div class="cart-items" id="cartItems">
+        <div class="empty-cart-msg">Your cart is empty.</div>
+      </div>
+      <div class="cart-total">
+        <span>Total</span>
+        <span id="cartTotalDisplay">₱0.00</span>
+      </div>
+    </div>
+
+    <div class="checkout-section">
+      <!-- Rx Check Panel -->
+      <div id="rxCheckPanel" class="rx-check-panel">
+        <h3>Prescription Check</h3>
+        <div id="rxStatusBox" class="rx-status-box">
+          <span id="rxStatusLabel" class="status-label otc">OTC (Not Required)</span>
+          <span id="rxStatusText">Scan your cart...</span>
+        </div>
+      </div>
+
+      <form id="checkoutForm">
+        <!-- Rx Upload Section -->
+        <div id="rxUploadSection" class="form-section" style="display: none;">
+          <h3>Prescription Upload</h3>
+          <div class="input-group">
+            <label for="prescriptionPhoto">Upload Prescription Photo <span style="color:red">*</span></label>
+            <input type="file" id="prescriptionPhoto" accept="image/*">
+          </div>
+        </div>
+
+        <div class="form-section">
+          <h3>Shipping Details</h3>
+          <div class="input-group">
+            <input type="text" id="fullName" placeholder="Full Name" required>
+          </div>
+          <div class="input-row">
+            <div class="input-group"><input type="tel" id="phone" placeholder="Phone Number" required></div>
+          </div>
+          <div class="input-group">
+            <!-- Delivery address is locked in CSS -->
+            <textarea id="address" placeholder="Delivery Address" required></textarea>
+          </div>
+        </div>
+
+        <!-- Dynamic Payment Section -->
+        <div class="form-section">
+          <h3>Payment</h3>
+          <div class="input-group">
+            <select id="paymentMethod" required>
+              <option value="" disabled selected>Select Payment Method...</option>
+              <option value="gcash">GCash</option>
+              <option value="cod">Cash on Delivery (COD)</option>
+              <option value="card">Credit / Debit Card</option>
+            </select>
+          </div>
+
+          <!-- Card Details (Hidden by default) -->
+          <div id="cardDetails" style="display: none;">
+            <div class="input-group">
+              <input type="text" id="cardNumber" placeholder="Card Number (0000 0000 0000 0000)">
+            </div>
+            <div class="input-row">
+              <div class="input-group"><input type="text" id="expiry" placeholder="MM/YY"></div>
+              <div class="input-group"><input type="text" id="cvv" placeholder="CVV"></div>
+            </div>
+          </div>
+
+          <!-- GCash Details (Hidden by default) -->
+          <div id="gcashDetails" style="display: none;">
+            <div class="input-group">
+              <label style="font-size: 11px;">Enter GCash Number to process payment</label>
+              <input type="tel" id="gcashNumber" placeholder="e.g., 0912 345 6789">
+            </div>
+          </div>
+
+        </div>
+        <button type="submit" class="submit-btn" id="submitBtn">Checkout Now</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    
+    // Updated Product List with Discord Images & Rx Requirements
+    const products = [
+      { id: 'p1', name: 'Benadryl', type: 'Diphenhydramine', price: 65.00, requiresRx: false, img: 'https://media.discordapp.net/attachments/1244116243573772329/1499434347923636224/BEN_300450235244_US_Allergy_Extra_Strength_Tablets_24CT_00000_Original-file.png?ex=69f5714e&is=69f41fce&hm=0a6af8d62a4c2a0a79e4fbbfb76aedc75a334f3805f577bffd44fdcccdb43c3b&=&format=webp&quality=lossless&width=856&height=856' },
+      { id: 'p2', name: 'Mucinex', type: 'Expectorant', price: 350.00, requiresRx: false, img: 'https://media.discordapp.net/attachments/1244116243573772329/1499438990959444210/Mucinex-CA-en-CA-rb-mucinex-carton-20pk-rbl1807561-3081939-front.png?ex=69f575a1&is=69f42421&hm=5010d43c96f2240bdb646584d4fd2b980272e89faa7b0460d8c536bbb5562a6a&=&format=webp&quality=lossless&width=856&height=856' },
+      { id: 'p3', name: 'Sudafed PE', type: 'Phenylephrine', price: 200.00, requiresRx: false, img: 'https://media.discordapp.net/attachments/1244116243573772329/1499440535205580983/pesinuscongestion_productshot2x-en-us.png?ex=69f57711&is=69f42591&hm=42bcaa47fbab5862a7757db0016b6db297b97c9686753f4c59541e69160d621b&=&format=webp&quality=lossless' },
+      { id: 'p4', name: 'Ventolin', type: 'Salbutamol', price: 450.00, requiresRx: true, img: 'https://media.discordapp.net/attachments/1244116243573772329/1499426354398232786/ventolin-inhaler-online-chemist-private-doctor.png?ex=69f569dc&is=69f4185c&hm=02155f9741b5f52832ed66af66f437a7a97465516c7acfbe7dca9c97c8a1df43&=&format=webp&quality=lossless&width=856&height=856' },
+      { id: 'p5', name: 'ProAir', type: 'Salbutamol', price: 400.00, requiresRx: true, img: 'https://media.discordapp.net/attachments/1244116243573772329/1499426355224383538/830603_1-595x595.png?ex=69f569dd&is=69f4185d&hm=ae16a7e6e623fb029280ed68575ab43e4b12a6dce539669425be1f6009235bea&=&format=webp&quality=lossless' },
+      { id: 'p6', name: 'AccuNeb', type: 'Albuterol', price: 350.00, requiresRx: true, img: 'https://media.discordapp.net/attachments/1244116243573772329/1499661230845988934/Accuneb.png?ex=69f59bdb&is=69f44a5b&hm=25be425ccfbe565fe68c9afc474e1b44b3742655b24ca372c2b46a0325f65432&=&format=webp&quality=lossless' },
+      { id: 'p7', name: 'Atrovent', type: 'Ipratropium', price: 500.00, requiresRx: true, img: 'https://media.discordapp.net/attachments/1244116243573772329/1499441822231957584/Atrovent-Inhaler-Ipratropium-Inhaler-20mcg-200-Doses-1.png?ex=69f57844&is=69f426c4&hm=924115cdac9ac89d417d0ccbe6b87366010b303f731b47f4defeb53bc86d0c86&=&format=webp&quality=lossless&width=856&height=856' },
+      { id: 'p8', name: 'Theo-24', type: 'Theophylline', price: 400.00, requiresRx: true, img: 'https://media.discordapp.net/attachments/1244116243573772329/1499442956795646013/image.png?ex=69f57953&is=69f427d3&hm=fc07ef15fba7bc48f0694d58ee0cb49f41d506d2e26d3e500ea8069129a70294&=&format=webp&quality=lossless' },
+      { id: 'p9', name: 'Elixophyllin', type: 'Theophylline', price: 350.00, requiresRx: true, img: 'https://media.discordapp.net/attachments/1244116243573772329/1499442956505977002/image.png?ex=69f57953&is=69f427d3&hm=e763bcce16c058b4881721e886aace239c42b102214c0d670e7c864d68461221&=&format=webp&quality=lossless&width=1096&height=856' },
+      { id: 'p10', name: 'Singulair', type: 'Montelukast', price: 400.00, requiresRx: true, img: 'https://media.discordapp.net/attachments/1244116243573772329/1499444761482887228/singulair.png?ex=69f57b01&is=69f42981&hm=bc23123bce15fa80fa3264d8c05ef3720c5feb30c7df1c74d78d7aaa057d15c9&=&format=webp&quality=lossless' },
+      { id: 'p11', name: 'Zofran', type: 'Antiemetics', price: 450.00, requiresRx: true, img: 'https://media.discordapp.net/attachments/1244116243573772329/1499446504799338696/product-image-zofran-1024x1024.png?ex=69f57ca1&is=69f42b21&hm=f5b13249c5277b9376b4081e5c2326acbcd6a0be476e4a2ed4d70ba18e836256&=&format=webp&quality=lossless&width=856&height=856' },
+      { id: 'p12', name: 'Imodium', type: 'Loperamide', price: 100.00, requiresRx: false, img: 'https://media.discordapp.net/attachments/1244116243573772329/1499447282263785532/IMO_300450295323_US_AD_Caplets_24CT_00000_Original-file.png?ex=69f57d5a&is=69f42bda&hm=e4568ef6c300bdee7eca7230ee44a4f2de3da057460e3dd13588c6e37902a93a&=&format=webp&quality=lossless&width=856&height=856' },
+      { id: 'p13', name: 'Diatabs', type: 'Loperamide', price: 80.00, requiresRx: false, img: 'https://media.discordapp.net/attachments/1244116243573772329/1499447283090063461/diatabs-advance-product-shot.png?ex=69f57d5a&is=69f42bda&hm=a08b6bb20a63ecef7e2b6cdad4e9faa19009583b7768113460cc412b24d598eb&=&format=webp&quality=lossless' },
+      { id: 'p14', name: 'Acidophilus', type: 'Probiotics', price: 800.00, requiresRx: false, img: 'https://media.discordapp.net/attachments/1244116243573772329/1499448019945525321/026133.png?ex=69f57e0a&is=69f42c8a&hm=1eb5ac3e6fd5a56b9cbd3eba8458f34bc0c60ecd3fd4166a5f8d3ead7fe6afbf&=&format=webp&quality=lossless&width=479&height=856' },
+      { id: 'p15', name: 'Dulcolax', type: 'Laxatives', price: 150.00, requiresRx: false, img: 'https://media.discordapp.net/attachments/1244116243573772329/1499449263225049159/2025_Sanofi_Dulcolax_ProductShot_Yellow-Front_CA.png?ex=69f57f32&is=69f42db2&hm=bf7eaca6b1ed712300a2a41087c8d8b50de5b5399542f83fb1fcf52817350bf0&=&format=webp&quality=lossless&width=1019&height=856' },
+      { id: 'p16', name: 'Cytotec', type: 'Misoprostol', price: 1500.00, requiresRx: true, img: 'https://media.discordapp.net/attachments/1244116243573772329/1499474323520487554/20210311_153347_131934_thuoc_cytotec_max_1800x1800_jpg_cd62406308.png?ex=69f59689&is=69f44509&hm=46bee46d321199ea93edf0a82d4e683f8e2b761bf90217fdfbcbca5e82a8685b&=&format=webp&quality=lossless' },
+      { id: 'p17', name: 'Mifegymiso', type: 'Misoprostol', price: 3500.00, requiresRx: true, img: 'https://media.discordapp.net/attachments/1244116243573772329/1499474324678115480/Misoprostol-Tablets-1719395898.png?ex=69f59689&is=69f44509&hm=8ccfe582c83566d2aee057a5dd1f71a234ab6cd65a84eb7d961fec04b96f1d0e&=&format=webp&quality=lossless&width=1105&height=856' },
+      { id: 'p18', name: 'Bentyl', type: 'Dicycloverine', price: 300.00, requiresRx: true, img: 'https://media.discordapp.net/attachments/1244116243573772329/1499475608067899583/images.png?ex=69f597bb&is=69f4463b&hm=092689505d5f2e648b89f5e222f695cef432f86b456eab46417978e56074d49f&=&format=webp&quality=lossless' },
+      { id: 'p19', name: 'Amoxil', type: 'Amoxicillin', price: 120.00, requiresRx: true, img: 'https://media.discordapp.net/attachments/1244116243573772329/1499477466019004626/WTCPH-10001747-back-zoom.png?ex=69f59976&is=69f447f6&hm=31ac16bc78e1551fb8b5585fc439644e92660758359da88df731def5e02850f5&=&format=webp&quality=lossless&width=856&height=856' },
+      { id: 'p20', name: 'Moxatag', type: 'Amoxicillin', price: 150.00, requiresRx: true, img: 'https://media.discordapp.net/attachments/1244116243573772329/1499477467411255447/426974.png?ex=69f59977&is=69f447f7&hm=094cccdad76995523ce4f88f0d4437e996d5f61d0e809c0de060dcfbc8d1317e&=&format=webp&quality=lossless&width=501&height=856' },
+      { id: 'p21', name: 'Trimox', type: 'Amoxicillin', price: 110.00, requiresRx: true, img: 'https://media.discordapp.net/attachments/1244116243573772329/1499477467755184178/EfVhDRNYW1-trimox_cv_kid_dt_tablet_6s_685993_0_1.png?ex=69f59977&is=69f447f7&hm=6250041c11fc87ecb43a3d914233a161675295bbebd5198a6118ab9a49298af4&=&format=webp&quality=lossless' },
+      { id: 'p22', name: 'Moxilin', type: 'Amoxicillin', price: 100.00, requiresRx: true, img: 'https://media.discordapp.net/attachments/1244116243573772329/1499477468141064382/MOXILIN-250-MG-INJ-1611396459582.png?ex=69f59977&is=69f447f7&hm=f2f0697b156b4832096665ca37b9f36d83447f12be0104ff80b0bb852b58e38a&=&format=webp&quality=lossless' },
+      { id: 'p23', name: 'Librium', type: 'Chlordiazepoxide', price: 500.00, requiresRx: true, img: 'https://media.discordapp.net/attachments/1244116243573772329/1499478458458312760/lib0014.png?ex=69f59a63&is=69f448e3&hm=d4e11346e0bf3b3b0861689d5f819f33eb412ab564c5cf9db9a38e73123dc695&=&format=webp&quality=lossless&width=856&height=856' }
+    ];
+
+    let cart = []; 
+
+    const productGrid = document.getElementById('productGrid');
+    const searchInput = document.getElementById('searchInput');
+    const cartItemsContainer = document.getElementById('cartItems');
+    const cartTotalDisplay = document.getElementById('cartTotalDisplay');
+    const checkoutForm = document.getElementById('checkoutForm');
+    
+    // Rx Elements
+    const rxStatusLabel = document.getElementById('rxStatusLabel');
+    const rxStatusText = document.getElementById('rxStatusText');
+    const rxUploadSection = document.getElementById('rxUploadSection');
+    const prescriptionPhotoInput = document.getElementById('prescriptionPhoto');
+
+    // Payment Elements
+    const paymentMethodSelect = document.getElementById('paymentMethod');
+    const cardDetails = document.getElementById('cardDetails');
+    const gcashDetails = document.getElementById('gcashDetails');
+    const cardNumberInput = document.getElementById('cardNumber');
+    const expiryInput = document.getElementById('expiry');
+    const cvvInput = document.getElementById('cvv');
+    const gcashNumberInput = document.getElementById('gcashNumber');
+
+    // --- Dynamic Payment Handler ---
+    paymentMethodSelect.addEventListener('change', (e) => {
+      const method = e.target.value;
+      
+      // Hide all first
+      cardDetails.style.display = 'none';
+      gcashDetails.style.display = 'none';
+      
+      // Remove required attributes so hidden fields don't block submission
+      cardNumberInput.removeAttribute('required');
+      expiryInput.removeAttribute('required');
+      cvvInput.removeAttribute('required');
+      gcashNumberInput.removeAttribute('required');
+
+      // Show and require based on selection
+      if (method === 'card') {
+        cardDetails.style.display = 'block';
+        cardNumberInput.setAttribute('required', 'true');
+        expiryInput.setAttribute('required', 'true');
+        cvvInput.setAttribute('required', 'true');
+      } else if (method === 'gcash') {
+        gcashDetails.style.display = 'block';
+        gcashNumberInput.setAttribute('required', 'true');
+      }
+      // COD requires no extra fields
+    });
+
+    // --- Product Rendering ---
+    function renderProducts(itemsToRender) {
+      productGrid.innerHTML = ''; 
+      if (itemsToRender.length === 0) {
+        productGrid.innerHTML = '<div class="no-results">No medicines found matching your search.</div>';
+        return;
+      }
+      itemsToRender.forEach(product => {
+        const card = document.createElement('div');
+        card.className = 'product-card';
+        const rxBadgeHtml = product.requiresRx ? '<div class="rx-card-badge">Rx</div>' : '';
+        card.innerHTML = `
+          ${rxBadgeHtml}
+          <img src="${product.img}" alt="${product.name}" class="product-image">
+          <div class="product-title">${product.name}</div>
+          <div class="product-type">${product.type}</div>
+          <div class="product-price">₱${product.price.toFixed(2)}</div>
+          <button class="add-to-cart-btn" onclick="addToCart('${product.id}')">Add To Cart</button>
+        `;
+        productGrid.appendChild(card);
+      });
+    }
+
+    renderProducts(products);
+
+    // --- Search ---
+    searchInput.addEventListener('input', (e) => {
+      const searchTerm = e.target.value.toLowerCase();
+      const filteredProducts = products.filter(product => {
+        return product.name.toLowerCase().includes(searchTerm) || 
+               product.type.toLowerCase().includes(searchTerm);
+      });
+      renderProducts(filteredProducts);
+    });
+
+    // --- Cart Logic ---
+    window.addToCart = (productId) => {
+      const existingItem = cart.find(item => item.id === productId);
+      if (existingItem) existingItem.quantity += 1;
+      else cart.push({ id: productId, quantity: 1 });
+      renderCart();
+    };
+
+    window.updateQty = (productId, change) => {
+      const itemIndex = cart.findIndex(item => item.id === productId);
+      if (itemIndex > -1) {
+        cart[itemIndex].quantity += change;
+        if (cart[itemIndex].quantity <= 0) cart.splice(itemIndex, 1);
+        renderCart();
+      }
+    };
+
+    function renderCart() {
+      cartItemsContainer.innerHTML = '';
+      let total = 0;
+      let requiresRxUpload = false; 
+
+      if (cart.length === 0) {
+        cartItemsContainer.innerHTML = '<div class="empty-cart-msg">Your cart is empty.</div>';
+      } else {
+        cart.forEach(cartItem => {
+          const product = products.find(p => p.id === cartItem.id);
+          const itemTotal = product.price * cartItem.quantity;
+          total += itemTotal;
+
+          if (product.requiresRx) requiresRxUpload = true; 
+
+          const itemDiv = document.createElement('div');
+          itemDiv.className = 'cart-item';
+          itemDiv.innerHTML = `
+            <img src="${product.img}" class="cart-item-img">
+            <div class="cart-item-details">
+              <div class="cart-item-title">${product.name}</div>
+              <div style="color: #000000;">₱${product.price.toFixed(2)}</div>
+            </div>
+            <div class="cart-item-controls">
+              <button type="button" class="qty-btn" onclick="updateQty('${product.id}', -1)">-</button>
+              <span>${cartItem.quantity}</span>
+              <button type="button" class="qty-btn" onclick="updateQty('${product.id}', 1)">+</button>
+            </div>
+          `;
+          cartItemsContainer.appendChild(itemDiv);
+        });
+      }
+      cartTotalDisplay.textContent = `₱${total.toFixed(2)}`;
+      
+      // Update Rx Check Panel UI
+      if (requiresRxUpload) {
+        rxStatusLabel.textContent = "Prescription Required";
+        rxStatusLabel.className = "status-label required";
+        rxStatusText.innerHTML = "Cart contains controlled products.";
+        rxUploadSection.style.display = "block";
+        prescriptionPhotoInput.setAttribute('required', 'true'); // Force file upload
+      } else {
+        rxStatusLabel.textContent = "OTC (Not Required)";
+        rxStatusLabel.className = "status-label otc";
+        rxStatusText.textContent = cart.length === 0 ? "Scan your cart..." : "All items are OTC products.";
+        rxUploadSection.style.display = "none";
+        prescriptionPhotoInput.removeAttribute('required'); // Remove force
+      }
+    }
+
+    // --- Checkout Submission ---
+    checkoutForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (cart.length === 0) {
+        alert("Please add items to your cart before checking out.");
+        return;
+      }
+      
+      const totalStr = cartTotalDisplay.textContent;
+      const method = paymentMethodSelect.options[paymentMethodSelect.selectedIndex].text;
+      
+      alert(`Order Placed Successfully!\n\nPayment Method: ${method}\nTotal Amount: ${totalStr}\n\nThank you for choosing our pharmacy!`);
+      
+      // Reset everything
+      checkoutForm.reset();
+      cardDetails.style.display = 'none';
+      gcashDetails.style.display = 'none';
+      cart = [];
+      renderCart();
+    });
+  });
+</script>
+
+</body>
+</html>
